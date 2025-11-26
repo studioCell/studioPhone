@@ -1,0 +1,397 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Gerador de Encartes de Ofertas - Instagram Stories</title>
+    
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+    
+    <link href="https://fonts.googleapis.com/css2?family=Luckiest+Guy&family=Poppins:wght@400;600;700&display=swap" rel="stylesheet">
+    <style>
+        /* [SEÇÃO CSS] */
+        :root {
+            --black-friday-bg: #000000;
+            --black-friday-text: #FFD700; 
+            --black-friday-secondary: #DC143C; 
+        }
+        body {
+            font-family: 'Poppins', sans-serif; 
+            margin: 0;
+            padding: 20px;
+            background-color: #f4f4f4;
+            display: flex;
+            gap: 20px;
+        }
+        #controles {
+            width: 300px;
+            padding: 20px;
+            background-color: #fff;
+            border-radius: 8px;
+            box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+        }
+        .control-group {
+            margin-bottom: 15px;
+        }
+        label {
+            display: block;
+            margin-bottom: 5px;
+            font-weight: 600; 
+        }
+        select, input[type="text"], input[type="number"] {
+            width: 100%;
+            padding: 8px;
+            margin-top: 4px;
+            box-sizing: border-box;
+            border: 1px solid #ccc;
+            border-radius: 4px;
+        }
+        input[type="number"] {
+            font-size: 1.2em;
+            color: var(--black-friday-secondary);
+        }
+
+        #encarte-preview {
+            width: 337.5px; 
+            height: 600px; 
+            
+            background-color: var(--black-friday-bg);
+            border: 5px solid var(--black-friday-secondary);
+            border-radius: 10px;
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.3);
+            position: relative;
+            overflow: hidden;
+            text-align: center;
+            display: flex; 
+            flex-direction: column;
+            align-items: center;
+            justify-content: space-between; 
+            
+            margin: 0 auto; 
+            flex-shrink: 0; 
+        }
+        
+        #encarte-preview::before {
+            content: "BLACK FRIDAY";
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%) rotate(-15deg);
+            font-size: 6em; 
+            color: rgba(255, 255, 255, 0.05);
+            font-weight: 900;
+            font-family: 'Luckiest Guy', cursive; 
+            z-index: 1;
+            white-space: nowrap; 
+        }
+
+        /* LOGO DA BLACK FRIDAY */
+        #logo-black-friday-img {
+            max-width: 48%; 
+            height: auto;
+            z-index: 5; 
+            position: absolute; 
+            top: 0px; 
+            left: 50%;
+            transform: translateX(-50%); 
+            filter: drop-shadow(0 0 8px rgba(255, 215, 0, 0.8)); 
+        }
+        
+        /* NOVO POSICIONAMENTO DO INSTAGRAM */
+        #instagram-top-left {
+            position: absolute;
+            top: 15px; 
+            left: 15px; 
+            z-index: 10; 
+            display: flex;
+            align-items: center;
+            gap: 5px;
+            color: #fff;
+            font-weight: 600;
+            font-size: 0.85em; 
+            text-shadow: 1px 1px 3px rgba(0, 0, 0, 0.5); 
+        }
+        /* ESTILO PARA O ÍCONE PNG DO INSTAGRAM NO TOPO */
+        .instagram-badge-top-png { /* Nova classe para o ícone PNG no topo */
+            width: 22px; 
+            height: 22px;
+            vertical-align: middle;
+        }
+
+        #conteudo-oferta {
+            position: relative;
+            z-index: 2;
+            padding: 25px 15px; 
+            width: 100%;
+            flex-grow: 1; 
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center; 
+        }
+
+        #produto-imagem {
+            max-width: 80%; 
+            max-height: 250px; 
+            object-fit: contain;
+            margin: 10px 0 0 0; 
+            z-index: 3; 
+        }
+        
+        #produto-nome {
+            font-family: 'Poppins', sans-serif; 
+            color: #fff;
+            font-size: 1.6em; 
+            font-weight: 700; 
+            margin-top: 5px; 
+            text-shadow: 1px 1px 3px rgba(0, 0, 0, 0.4);
+            z-index: 3; 
+        }
+        
+        /* POSICIONAMENTO DO PREÇO (ACIMA DO RODAPÉ) */
+        #preco-container {
+            position: absolute; 
+            bottom: 70px; 
+            left: 50%; 
+            transform: translateX(-50%); 
+            z-index: 4; 
+            text-align: center; 
+            pointer-events: none; 
+        }
+
+        #produto-preco {
+            background-color: transparent; 
+            color: #fff; 
+            padding: 0; 
+            border-radius: 0;
+            font-size: 3.2em; 
+            font-weight: bold;
+            font-family: 'Luckiest Guy', cursive; 
+            box-shadow: none; 
+            display: inline-block; 
+            line-height: 1.2; 
+            text-shadow: 0 0 5px var(--black-friday-secondary), 0 0 10px rgba(220, 20, 60, 0.5); 
+        }
+        
+        /* ESTILO PARA O NOVO RODAPÉ (APENAS WHATSAPP) */
+        #rodape-contato {
+            color: #fff; 
+            font-size: 0.95em; 
+            padding: 10px 0; 
+            border-top: 1px dashed rgba(255, 255, 255, 0.3);
+            width: 100%; 
+            position: absolute; 
+            bottom: 0; 
+            left: 0;
+            transform: none; 
+            z-index: 2;
+            background-color: rgba(0, 0, 0, 0.5); 
+            
+            /* CENTRALIZAÇÃO */
+            display: flex; 
+            justify-content: center; 
+            align-items: center; 
+            gap: 10px; 
+        }
+        #contato-info { 
+            display: flex; 
+            align-items: center;
+            gap: 5px; 
+        }
+        /* Estilo para as imagens de ícones (agora para o WhatsApp) */
+        .icon-badge-png {
+            width: 20px; 
+            height: 20px;
+            vertical-align: middle;
+        }
+        #contato-numero { 
+            white-space: nowrap; 
+            color: #fff;
+            font-size: 0.85em; 
+        }
+        .separator {
+            display: none; 
+        }
+    </style>
+</head>
+<body>
+
+    <div id="controles">
+        <h2>Controles da Oferta</h2>
+        <div class="control-group">
+            <label for="marca-select">1. Marca do Celular</label>
+            <select id="marca-select">
+                <option value="xiaomi">Xiaomi</option>
+                <option value="apple">Apple</option>
+            </select>
+        </div>
+
+        <div class="control-group">
+            <label for="modelo-select">2. Modelo do Celular</label>
+            <select id="modelo-select"></select>
+        </div>
+
+        <div class="control-group">
+            <label for="valor-input">3. Novo Valor da Oferta (R$)</label>
+            <input type="number" id="valor-input" value="999.99" step="0.01" min="0">
+        </div>
+
+        <hr>
+
+        <div class="control-group">
+            <label for="instagram-input">4. Nome do Instagram (@)</label>
+            <input type="text" id="instagram-input" value="@Tecmautas_imports.go" maxlength="30">
+        </div>
+
+        <div class="control-group">
+            <label for="contato-input">5. Contato / WhatsApp</label>
+            <input type="text" id="contato-input" value="(99) 99999-9999" maxlength="20">
+        </div>
+
+        <button onclick="salvarEncarte()" 
+                style="padding: 10px; background-color: #007bff; color: white; border: none; border-radius: 5px; width: 100%; cursor: pointer;">
+            Salvar Imagem do Encarte
+        </button>
+    </div>
+
+    <div id="encarte-preview">
+        
+        <img id="logo-black-friday-img" 
+             src="https://i.ibb.co/RG4YVHqL/TECMAUTAS-Black-Friday-removebg-preview.png" 
+             alt="Logo Black Friday">
+             
+        <div id="instagram-top-left">
+            <img src="https://i.ibb.co/xqkmcZNc/Verification-Blue-Tick-PNG.png" 
+                 alt="Ícone Verificado" 
+                 class="instagram-badge-top-png">
+            <span id="instagram-nome">@Tecmautas_imports.go</span>
+        </div>
+             
+        <div id="conteudo-oferta">
+            
+            <img id="produto-imagem" src="" alt="Imagem do Produto">
+            <div id="produto-nome">NOME DO PRODUTO AQUI</div>
+        </div>
+        
+        <div id="preco-container">
+            <div id="produto-preco">
+                <span id="preco-simbolo">R$</span><span id="preco-valor">999,99</span>
+            </div>
+        </div>
+        
+        <div id="rodape-contato">
+            <div id="contato-info">
+                <img src="https://i.ibb.co/XZgwV8S1/Snap-2025-11-26-06-56-17-removebg-preview.png" 
+                     alt="Ícone WhatsApp" 
+                     class="icon-badge-png">
+                <span id="contato-numero">(99) 99999-9999</span>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // === JAVASCRIPT ===
+
+        const modelos = {
+            xiaomi: {
+                'Poco X7 Pro': { 
+                    img: 'https://i.ibb.co/PZ37ZQBh/56b51295abe5648063dfa24601641213-removebg-preview.png' 
+                },
+                'Redmi 14C': {
+                    img: 'https://i.ibb.co/svwXmyXJ/1491f8f70ec78d5d5c35087c0fdb56c6-removebg-preview.png'
+                },
+                'Note 14': { 
+                    img: 'https://i.im.ge/2025/11/26/4hJnqF.6249826c4ca37bf8f843561ae919e229.png' 
+                }
+            },
+            apple: {
+                'iPhone 11': { img: 'https://via.placeholder.com/300x300/f0f0f0/000000?text=Apple+iPhone+11' },
+                'iPhone 17': { img: 'https://via.placeholder.com/300x300/f0f0f0/000000?text=Apple+iPhone+17' }
+            }
+        };
+
+        const marcaSelect = document.getElementById('marca-select');
+        const modeloSelect = document.getElementById('modelo-select');
+        const valorInput = document.getElementById('valor-input');
+        const instagramInput = document.getElementById('instagram-input');
+        const contatoInput = document.getElementById('contato-input');
+
+        const imagemProduto = document.getElementById('produto-imagem');
+        const nomeProduto = document.getElementById('produto-nome');
+        const precoValor = document.getElementById('preco-valor');
+        const instagramNome = document.getElementById('instagram-nome');
+        const contatoNumero = document.getElementById('contato-numero'); 
+
+        function preencherModelos() {
+            const marcaSelecionada = marcaSelect.value;
+            const modelosDaMarca = modelos[marcaSelecionada];
+            
+            modeloSelect.innerHTML = ''; 
+            
+            const optionVazia = document.createElement('option');
+            optionVazia.value = '';
+            optionVazia.textContent = 'Selecione o Modelo...';
+            modeloSelect.appendChild(optionVazia);
+
+            for (const modelo in modelosDaMarca) {
+                const option = document.createElement('option');
+                option.value = modelo;
+                option.textContent = modelo;
+                modeloSelect.appendChild(option);
+            }
+            atualizarEncarte();
+        }
+
+        function atualizarEncarte() {
+            const marca = marcaSelect.value;
+            const modelo = modeloSelect.value;
+            const valor = parseFloat(valorInput.value).toFixed(2).replace('.', ',');
+            const instagram = instagramInput.value || "@sua_loja";
+            const contato = contatoInput.value || "(00) 00000-0000"; 
+
+            if (modelo && modelos[marca] && modelos[marca][modelo]) {
+                const produtoInfo = modelos[marca][modelo];
+                imagemProduto.src = produtoInfo.img;
+                nomeProduto.textContent = modelo;
+            } else {
+                imagemProduto.src = ''; 
+                nomeProduto.textContent = 'SELECIONE O MODELO';
+            }
+
+            precoValor.textContent = valor;
+            instagramNome.textContent = instagram;
+            contatoNumero.textContent = contato; 
+        }
+
+        function salvarEncarte() {
+            const encarteElement = document.getElementById('encarte-preview');
+            const produtoNome = nomeProduto.textContent.replace(/\s/g, '_');
+
+            html2canvas(encarteElement, {
+                allowTaint: true,
+                useCORS: true,
+                scale: 2 
+            }).then(function(canvas) {
+                const imgData = canvas.toDataURL('image/png');
+
+                const link = document.createElement('a');
+                link.href = imgData;
+                link.download = `story_oferta_${produtoNome}.png`;
+
+                link.click();
+            }).catch(function(error) {
+                console.error('Erro ao salvar o encarte:', error);
+                alert('Ocorreu um erro ao salvar a imagem. Verifique o console para mais detalhes.');
+            });
+        }
+
+        marcaSelect.addEventListener('change', preencherModelos);
+        modeloSelect.addEventListener('change', atualizarEncarte);
+        valorInput.addEventListener('input', atualizarEncarte);
+        instagramInput.addEventListener('input', atualizarEncarte);
+        contatoInput.addEventListener('input', atualizarEncarte);
+
+        preencherModelos();
+    </script>
+</body>
+</html>
